@@ -1,4 +1,4 @@
-const { Schema, model } = require("mongoose");
+const { Schema, Types, model } = require("mongoose");
 
 const UserSchema = new Schema({
   name: { type: String, required: true, trim: true },
@@ -16,6 +16,14 @@ const UserSchema = new Schema({
     required: true,
     default: "USER",
   },
+  tasks: {
+    type: [{ type: Types.ObjectId, ref: "Task" }],
+    // validation: (Rule) =>
+    //   Rule.max(3).warning(
+    //     `The amount of tasks shouldn't be more than 3 per day.`
+    //   ),
+  },
+  profileimage: { type: String, default: "../img/UserImages.png" },
 });
 
 const UserModel = model("User", UserSchema);

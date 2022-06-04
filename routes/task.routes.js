@@ -9,27 +9,42 @@ const attachCurrentUser = require("../middlewares/attachCurrentUser");
 //Post para criar tarefas
 router.post("/task", isAuthenticated, attachCurrentUser, async (req, res) => {
   try {
-    const { name, field, date, wekday, starttime, endtime, comments } =
+    const { name, field, date, weekday, starttime, endtime, comments } =
       req.body;
     const { _id } = req.user;
     const result = await Task.create({
       name,
       field,
       date,
-      wekday,
+      weekday,
       starttime,
       endtime,
       comments,
       createdBy: _id,
     });
     await User.updateOne({ _id }, { $push: { tasks: result._id } });
-    
-    const resultStep = await Step.insertMany([...req.body.steps]);
+
+    const resultStep = await Step.insertMany(
+      [...req.body.steps].map((currentEl) => {
+        return { description: currentEl.value, taskid: result._id };
+      })
+    );
+
+    console.log(resultStep);
+
     await Task.updateOne(
       { _id: result._id },
-      { $push: { steps: resultStep._id } }
+      {
+        $push: {
+          steps: {
+            $each: resultStep.map((currentEl) => {
+              return currentEl._id;
+            }),
+          },
+        },
+      }
     );
-    
+
     return res.status(201).json(result);
   } catch (err) {
     console.error(err);

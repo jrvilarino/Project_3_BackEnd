@@ -15,9 +15,9 @@ const userRouter = require("./routes/user.routes");
 const taskRouter = require("./routes/task.routes");
 const stepRouter = require("./routes/step.routes");
 
-app.use("/api", userRouter);
-app.use("/api", taskRouter);
-app.use("/api", stepRouter);
+app.use("/", userRouter);
+app.use("/", taskRouter);
+app.use("/", stepRouter);
 
 app.listen(Number(process.env.PORT), () =>
   console.log(`Server up and running at port ${process.env.PORT}`)

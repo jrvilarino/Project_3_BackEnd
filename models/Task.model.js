@@ -5,7 +5,7 @@ const TaskSchema = new Schema({
   steps: [{ type: Types.ObjectId, ref: "Step" }],
   createdBy: { type: Types.ObjectId, ref: "User" },
   field: { type: String, enum: ["Work", "Home", "Education"] },
-  date: { type: Date, required: true },
+  date: { type: String, required: true },
   weekday: {
     type: String,
     enum: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
@@ -13,8 +13,8 @@ const TaskSchema = new Schema({
   },
   starttime: { type: String, required: true },
   endtime: { type: String, required: true },
-  comments: [{type: String}],
-  done: {type: Boolean, default: false}
+  comments: [{ type: String }],
+  done: { type: Boolean, default: false },
 });
 
 const TaskModel = model("Task", TaskSchema);

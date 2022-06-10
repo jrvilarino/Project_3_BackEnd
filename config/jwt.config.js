@@ -6,9 +6,7 @@ module.exports = function generateToken(user) {
 
   // Acessando a variável de ambiente definida no .env
   const signature = process.env.TOKEN_SIGN_SECRET;
-  const expiration = "6h";
+  // const expiration = "30s";
 
-  return jwt.sign({ _id, name, email, role }, signature, {
-    expiresIn: expiration,
-  });
+  return jwt.sign({ _id, name, email, role }, signature);
 };

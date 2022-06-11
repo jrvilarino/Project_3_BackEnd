@@ -1,4 +1,5 @@
 const { Schema, Types, model } = require("mongoose");
+const path = require("path")
 
 const UserSchema = new Schema({
   name: { type: String, required: true, trim: true },
@@ -23,7 +24,7 @@ const UserSchema = new Schema({
     //     `The amount of tasks shouldn't be more than 3 per day.`
     //   ),
   },
-  profileimage: { type: String, default: "../img/UserImages.png" },
+  profileimage: { type: String, default: path.resolve(__dirname, '../img/UserImages.png') },
 });
 
 const UserModel = model("User", UserSchema);

@@ -55,7 +55,9 @@ router.post("/task", isAuthenticated, attachCurrentUser, async (req, res) => {
 router.get("/tasks/:date", isAuthenticated, async (req, res) => {
   try {
     const { date } = req.params;
-    const result = await Task.find({ date: { $eq: date } }).populate("steps");
+    const {_id} = req.user;
+  
+    const result = await Task.find({ date, createdBy: _id }).populate("steps");
 
     if (!result) {
       return res

@@ -100,8 +100,33 @@ router.patch(
       const result = await Task.findOneAndUpdate(
         { _id, createdBy: req.user._id },
         { $set: req.body },
+//deletar as referencias dos steps na tarefa
+        // { $pullAll: { steps } },
         { new: true, runValidators: true }
       );
+//deletemany para limpar os steps ja criados na tarefa
+// await Step.deleteMany({ taskid: _id });
+//insertmany para criar os steps novamente e adicionar os novos
+// const resultStep = await Step.insertMany(
+//   [...req.body.steps].map((currentEl) => {
+//     return { description: currentEl.value, taskid: result._id };
+//   })
+// );
+
+// console.log(resultStep);
+
+// await Task.updateOne(
+//   { _id: result._id },
+//   {
+//     $push: {
+//       steps: {
+//         $each: resultStep.map((currentEl) => {
+//           return currentEl._id;
+//         }),
+//       },
+//     },
+//   }
+// );
 
       if (!result) {
         return res.status(404).json({ msg: "Task not found." });

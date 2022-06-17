@@ -55,8 +55,8 @@ router.post("/task", isAuthenticated, attachCurrentUser, async (req, res) => {
 router.get("/tasks/:date", isAuthenticated, async (req, res) => {
   try {
     const { date } = req.params;
-    const {_id} = req.user;
-  
+    const { _id } = req.user;
+
     const result = await Task.find({ date, createdBy: _id }).populate("steps");
 
     if (!result) {
@@ -96,43 +96,46 @@ router.patch(
   async (req, res) => {
     try {
       const { _id } = req.params;
-
+      //deletemany para limpar os steps ja criados na tarefa
+      await Step.deleteMany({ taskid: _id });
+      //insertmany para criar os steps novamente e adicionar os novos
+      const resultStep = await Step.insertMany(
+        [...req.body.steps].map((currentEl) => {
+          return { description: currentEl.value, taskid: _id };
+        })
+      );
+      const { name, field, date, weekday, starttime, endtime, comments, done } =
+        req.body;
       const result = await Task.findOneAndUpdate(
         { _id, createdBy: req.user._id },
-        { $set: req.body },
-//deletar as referencias dos steps na tarefa
-        // { $pullAll: { steps } },
+        {
+          $set: {
+            name: name,
+            comments: comments,
+            field: field,
+            date: date,
+            wekday: weekday,
+            starttime: starttime,
+            endtime: endtime,
+            done: done,
+          },
+
+          $push: {
+            steps: {
+              $each: resultStep.map((currentEl) => {
+                return currentEl._id;
+              }),
+            },
+          },
+        },
         { new: true, runValidators: true }
       );
-//deletemany para limpar os steps ja criados na tarefa
-// await Step.deleteMany({ taskid: _id });
-//insertmany para criar os steps novamente e adicionar os novos
-// const resultStep = await Step.insertMany(
-//   [...req.body.steps].map((currentEl) => {
-//     return { description: currentEl.value, taskid: result._id };
-//   })
-// );
-
-// console.log(resultStep);
-
-// await Task.updateOne(
-//   { _id: result._id },
-//   {
-//     $push: {
-//       steps: {
-//         $each: resultStep.map((currentEl) => {
-//           return currentEl._id;
-//         }),
-//       },
-//     },
-//   }
-// );
 
       if (!result) {
         return res.status(404).json({ msg: "Task not found." });
       }
 
-      return res.status(200).json(result);
+      return res.status(200).json("result");
     } catch (err) {
       console.error(err);
       return res.status(500).json({ msg: "Action failed." });

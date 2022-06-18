@@ -142,6 +142,25 @@ router.patch(
     }
   }
 );
+//rota para endtask
+router.patch(
+  "/task/endtask/:_id",
+  isAuthenticated,
+  attachCurrentUser,
+  async (req, res) => {
+    try {
+      const { _id } = req.params;
+      await Task.updateOne(
+        { _id, createdBy: req.user._id },
+        { $set: { done: req.body.done } },
+        { new: true, runValidators: true }
+      );
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ msg: "Action failed." });
+    }
+  }
+);
 //delete apagar tarefas
 router.delete(
   "/task/:_id",

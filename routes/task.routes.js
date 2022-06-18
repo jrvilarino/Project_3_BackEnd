@@ -1,3 +1,5 @@
+const parse = require("date-fns/parse");
+
 const router = require("express").Router();
 
 const Task = require("../models/Task.model");
@@ -9,16 +11,20 @@ const attachCurrentUser = require("../middlewares/attachCurrentUser");
 //Post para criar tarefas
 router.post("/task", isAuthenticated, attachCurrentUser, async (req, res) => {
   try {
-    const { name, field, date, weekday, starttime, endtime, comments } =
-      req.body;
+    const { name, field, date, starttime, endtime, comments } = req.body;
+    const splitStartTime = starttime.split(":");
+    const splitEndTime = endtime.split(":");
+
+    const startdate = parse(`${date} ${starttime}`, 'yyyy-MM-dd HH:mm', new Date())
+
+    const enddate = parse(`${date} ${endtime}`, 'yyyy-MM-dd HH:mm', new Date())
+   
     const { _id } = req.user;
     const result = await Task.create({
       name,
       field,
-      date,
-      weekday,
-      starttime,
-      endtime,
+      startdate,
+      enddate,
       comments,
       createdBy: _id,
     });
@@ -57,14 +63,17 @@ router.get("/tasks/:date", isAuthenticated, async (req, res) => {
     const { date } = req.params;
     const { _id } = req.user;
 
-    const result = await Task.find({ date, createdBy: _id }).populate("steps");
-
+    const result = await Task.find({
+      startdate: {$gte: new Date(date)},
+      createdBy: _id,
+    }).sort({startdate:1}).populate("steps");
+    console.log(date);
     if (!result) {
       return res
         .status(404)
         .json({ msg: "There is no tasks in that date yet" });
     }
-
+    console.log(result);
     return res.status(200).json(result);
   } catch (err) {
     console.error(err);
@@ -150,11 +159,12 @@ router.patch(
   async (req, res) => {
     try {
       const { _id } = req.params;
-      await Task.updateOne(
+      const result = await Task.updateOne(
         { _id, createdBy: req.user._id },
         { $set: { done: req.body.done } },
         { new: true, runValidators: true }
       );
+      return res.status(200).json(result);
     } catch (err) {
       console.error(err);
       return res.status(500).json({ msg: "Action failed." });

@@ -1,24 +1,28 @@
-const parse = require("date-fns/parse");
+const parse = require('date-fns/parse');
 
-const router = require("express").Router();
+const router = require('express').Router();
 
-const Task = require("../models/Task.model");
-const User = require("../models/User.model");
-const Step = require("../models/Step.model");
-const isAuthenticated = require("../middlewares/isAuthenticated");
-const attachCurrentUser = require("../middlewares/attachCurrentUser");
+const Task = require('../models/Task.model');
+const User = require('../models/User.model');
+const Step = require('../models/Step.model');
+const isAuthenticated = require('../middlewares/isAuthenticated');
+const attachCurrentUser = require('../middlewares/attachCurrentUser');
 
 //Post para criar tarefas
-router.post("/task", isAuthenticated, attachCurrentUser, async (req, res) => {
+router.post('/task', isAuthenticated, attachCurrentUser, async (req, res) => {
   try {
     const { name, field, date, starttime, endtime, comments } = req.body;
-    const splitStartTime = starttime.split(":");
-    const splitEndTime = endtime.split(":");
+    // const splitStartTime = starttime.split(":");
+    // const splitEndTime = endtime.split(":");
 
-    const startdate = parse(`${date} ${starttime}`, 'yyyy-MM-dd HH:mm', new Date())
+    const startdate = parse(
+      `${date} ${starttime}`,
+      'yyyy-MM-dd HH:mm',
+      new Date()
+    );
 
-    const enddate = parse(`${date} ${endtime}`, 'yyyy-MM-dd HH:mm', new Date())
-   
+    const enddate = parse(`${date} ${endtime}`, 'yyyy-MM-dd HH:mm', new Date());
+
     const { _id } = req.user;
     const result = await Task.create({
       name,
@@ -54,52 +58,57 @@ router.post("/task", isAuthenticated, attachCurrentUser, async (req, res) => {
     return res.status(201).json(result);
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ msg: "Task creation failed." });
+    return res.status(500).json({ msg: 'Task creation failed.' });
   }
 });
 //get listar tarefas do dia
-router.get("/tasks/:date", isAuthenticated, async (req, res) => {
+router.get('/tasks/:date', isAuthenticated, async (req, res) => {
   try {
     const { date } = req.params;
     const { _id } = req.user;
 
     const result = await Task.find({
-      startdate: {$gte: new Date(date)},
+      startdate: {
+        $gte: new Date(date),
+        $lte: new Date(date).setDate(new Date(date).getDate() + 1),
+      },
       createdBy: _id,
-    }).sort({startdate:1}).populate("steps");
+    })
+      .sort({ startdate: 1 })
+      .populate('steps');
     console.log(date);
     if (!result) {
       return res
         .status(404)
-        .json({ msg: "There is no tasks in that date yet" });
+        .json({ msg: 'There is no tasks in that date yet' });
     }
     console.log(result);
     return res.status(200).json(result);
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ msg: "Action failed." });
+    return res.status(500).json({ msg: 'Action failed.' });
   }
 });
 
 //get para detalhes da tarefa
-router.get("/task/:_id", isAuthenticated, async (req, res) => {
+router.get('/task/:_id', isAuthenticated, async (req, res) => {
   try {
     const { _id } = req.params;
-    const result = await Task.findOne({ _id }).populate("steps");
+    const result = await Task.findOne({ _id }).populate('steps');
 
     if (!result) {
-      return res.status(404).json({ msg: "Task not found." });
+      return res.status(404).json({ msg: 'Task not found.' });
     }
 
     return res.status(200).json(result);
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ msg: "Action failed." });
+    return res.status(500).json({ msg: 'Action failed.' });
   }
 });
 //patch editar tarefas
 router.patch(
-  "/task/:_id",
+  '/task/:_id',
   isAuthenticated,
   attachCurrentUser,
   async (req, res) => {
@@ -113,8 +122,19 @@ router.patch(
           return { description: currentEl.value, taskid: _id };
         })
       );
-      const { name, field, date, weekday, starttime, endtime, comments, done } =
+      const { name, field, date, starttime, endtime, comments, done } =
         req.body;
+
+      const startdate = parse(
+        `${date} ${starttime}`,
+        'yyyy-MM-dd HH:mm',
+        new Date()
+      );
+      const enddate = parse(
+        `${date} ${endtime}`,
+        'yyyy-MM-dd HH:mm',
+        new Date()
+      );
       const result = await Task.findOneAndUpdate(
         { _id, createdBy: req.user._id },
         {
@@ -122,10 +142,8 @@ router.patch(
             name: name,
             comments: comments,
             field: field,
-            date: date,
-            wekday: weekday,
-            starttime: starttime,
-            endtime: endtime,
+            startdate: startdate,
+            enddate: enddate,
             done: done,
           },
 
@@ -141,19 +159,19 @@ router.patch(
       );
 
       if (!result) {
-        return res.status(404).json({ msg: "Task not found." });
+        return res.status(404).json({ msg: 'Task not found.' });
       }
 
-      return res.status(200).json("result");
+      return res.status(200).json('result');
     } catch (err) {
       console.error(err);
-      return res.status(500).json({ msg: "Action failed." });
+      return res.status(500).json({ msg: 'Action failed.' });
     }
   }
 );
 //rota para endtask
 router.patch(
-  "/task/endtask/:_id",
+  '/task/endtask/:_id',
   isAuthenticated,
   attachCurrentUser,
   async (req, res) => {
@@ -167,13 +185,13 @@ router.patch(
       return res.status(200).json(result);
     } catch (err) {
       console.error(err);
-      return res.status(500).json({ msg: "Action failed." });
+      return res.status(500).json({ msg: 'Action failed.' });
     }
   }
 );
 //delete apagar tarefas
 router.delete(
-  "/task/:_id",
+  '/task/:_id',
   isAuthenticated,
   attachCurrentUser,
   async (req, res) => {
@@ -190,7 +208,7 @@ router.delete(
       return res.status(200).json({});
     } catch (err) {
       console.error(err);
-      return res.status(500).json({ msg: "Internal server error." });
+      return res.status(500).json({ msg: 'Internal server error.' });
     }
   }
 );
